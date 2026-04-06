@@ -189,6 +189,24 @@ impl RQS {
             });
         }
 
+        #[cfg(all(feature = "experimental", target_os = "windows"))]
+        {
+            let ctk_blea = ctk.clone();
+            tracker.spawn(async move {
+                let blea = match BleAdvertiser::new().await {
+                    Ok(b) => b,
+                    Err(e) => {
+                        warn!("Windows BLE advertiser not available: {}", e);
+                        return;
+                    }
+                };
+
+                if let Err(e) = blea.run(ctk_blea).await {
+                    warn!("Windows BLE advertiser stopped: {}", e);
+                }
+            });
+        }
+
         let discovery = MDnsDiscovery::new(sender)?;
         tracker.spawn(async move { discovery.run(ctk.clone()).await });
 
