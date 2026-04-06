@@ -114,9 +114,10 @@ jobs:
         shell: pwsh
         run: |
           $bundlePath = "${{ github.workspace }}\${{ matrix.target_path }}\src-tauri\target\debug\bundle"
-          $name = "${{ matrix.name }}"
-          Get-ChildItem -Path $bundlePath -Recurse -Directory | Where-Object { $_.Name -match 'msi|exe|appx' } | ForEach-Object {
-            Write-Host "Found artifact: $($_.FullName)"
+          if (Test-Path $bundlePath) {
+            & "${{ github.workspace }}\rename_build.ps1" -BaseDirectory $bundlePath -TauriVersion "${{ matrix.name }}" -DebugMode
+          } else {
+            Write-Host "Bundle path not found: $bundlePath"
           }
 
       - name: Upload result
