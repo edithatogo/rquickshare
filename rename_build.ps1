@@ -12,6 +12,8 @@ param(
     [switch]$DebugMode
 )
 
+$ErrorActionPreference = 'Stop'
+
 # Find all relevant files in the base directory
 $extensions = @("*.msi", "*.exe", "*.appx")
 $files = @()
@@ -34,33 +36,30 @@ foreach ($file in $files) {
 
     # Extract version and variant from filename
     # Patterns: r-quick-share_0.11.5_x64.msi, RQuickShare-0.11.5-1-x64.exe, etc.
-    $versionPattern = '([Rr](-[_]?)[Qq]uick([_-][Ss]hare))[_-]?([0-9]+\.[0-9]+\.[0-9]+)[_-]?(.*)\.' + [regex]::Escape($extension)
+    $versionPattern = '^(?:r-quick-share|RQuickShare)[_-](?<version>[0-9]+\.[0-9]+\.[0-9]+)[_-](?<variant>.+)\.' + [regex]::Escape($extension) + '$'
 
     if ($filename -match $versionPattern) {
-        $version = "v$($Matches[4])"
-        $anything = $Matches[5].Trim('_-')
+        $version = "v$($Matches['version'])"
+        $anything = $Matches['variant']
     }
     else {
-        # Fallback: use filename without extension as-is
-        $version = ""
-        $anything = $filename
-        Write-Host "Filename does not match expected pattern: $filename, using fallback"
+        # Leave unrelated executables and previously renamed artifacts intact.
+        Write-Host "Skipping unrecognized artifact: $filename"
+        continue
     }
 
     # Construct new filename
     $debugSuffix = if ($DebugMode) { "-debug" } else { "" }
 
-    if (-not [string]::IsNullOrEmpty($version)) {
-        $newFilename = "r-quick-share-${TauriVersion}${debugSuffix}_${version}_${anything}.${extension}"
-    }
-    else {
-        $newFilename = "r-quick-share-${TauriVersion}${debugSuffix}_${anything}.${extension}"
-    }
+    $newFilename = "r-quick-share-${TauriVersion}${debugSuffix}_${version}_${anything}.${extension}"
 
     $newPath = Join-Path $dir $newFilename
 
     # Rename the file
-    Rename-Item -Path $file.FullName -NewName $newFilename
+    if (Test-Path -LiteralPath $newPath) {
+        throw "Refusing to overwrite existing artifact: $newPath"
+    }
+    Rename-Item -LiteralPath $file.FullName -NewName $newFilename
     Write-Host "Renamed $filename to $newPath"
 }
 

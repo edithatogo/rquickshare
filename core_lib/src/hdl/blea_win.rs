@@ -16,8 +16,7 @@ impl BleAdvertiser {
     pub async fn new() -> Result<Self, anyhow::Error> {
         Err(anyhow::anyhow!(
             "Windows BLE advertiser is not yet implemented. \
-             Android devices will require manual receive UI activation. \
-             See: https://github.com/Martichou/rquickshare/issues/TBD"
+             Android devices will require manual receive UI activation."
         ))
     }
 

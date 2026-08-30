@@ -6,7 +6,10 @@ use std::sync::{Arc, Mutex, RwLock};
 
 use anyhow::anyhow;
 use channel::ChannelMessage;
-#[cfg(all(feature = "experimental", target_os = "linux"))]
+#[cfg(all(
+    feature = "experimental",
+    any(target_os = "linux", target_os = "windows")
+))]
 use hdl::BleAdvertiser;
 use hdl::MDnsDiscovery;
 use once_cell::sync::Lazy;
@@ -26,6 +29,7 @@ pub mod channel;
 mod errors;
 mod hdl;
 mod manager;
+mod offset_write;
 mod utils;
 
 pub use hdl::{EndpointInfo, OutboundPayload, State, Visibility};

@@ -40,6 +40,10 @@ jobs:
           cd ./core_lib
           cargo test
           cargo build
+      - name: Test Windows artifact renaming
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/rename_build.Tests.ps1
 
   build_tauri:
     runs-on: ${{ matrix.os }}
@@ -57,7 +61,7 @@ jobs:
             name: main
             target_path: app/main
             cache_directory: app/main/src-tauri/target
-          - os: macos-13
+          - os: macos-15-intel
             name: main
             target_path: app/main
             cache_directory: app/main/src-tauri/target
@@ -97,6 +101,7 @@ jobs:
           echo "GLIBC version: ${GLIBC_VER}"
 
       - name: Build Vite + Tauri
+        shell: bash
         run: |
           rm -rf ${{ github.workspace }}/${{ matrix.target_path }}/src-tauri/target/debug/bundle/
           cd ./${{ matrix.target_path }}

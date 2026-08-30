@@ -218,30 +218,7 @@ pub fn is_not_self_ip(ip_address: &Ipv4Addr) -> bool {
     true
 }
 
-/// Cross-platform random-access file write.
-/// On Unix, uses `FileExt::write_all_at` (single syscall, no file position mutation).
-/// On Windows, uses `seek` + `write_all` (requires mutable access).
-pub fn write_all_at_offset(file: &std::fs::File, data: &[u8], offset: u64) -> std::io::Result<()> {
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::FileExt;
-        file.write_all_at(data, offset)
-    }
-    #[cfg(windows)]
-    {
-        use std::io::{Seek, SeekFrom, Write};
-        let mut file = file.try_clone()?;
-        file.seek(SeekFrom::Start(offset))?;
-        file.write_all(data)
-    }
-    #[cfg(not(any(unix, windows)))]
-    {
-        use std::io::{Seek, SeekFrom, Write};
-        let mut file = file.try_clone()?;
-        file.seek(SeekFrom::Start(offset))?;
-        file.write_all(data)
-    }
-}
+pub use crate::offset_write::write_all_at_offset;
 
 #[cfg(test)]
 mod tests {
